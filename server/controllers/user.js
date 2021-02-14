@@ -32,7 +32,14 @@ const changeCredentials = async (req, res) => {
       user.password = new_hashed_password;
       try {
         await user.save();
-        return res.json({ message: "Successfully changed credentials" });
+        return res.json({
+          user: {
+            _id: user._id,
+            name,
+            email,
+          },
+          message: "Successfully changeed credentials In...",
+        });
       } catch (err) {
         res.status(500).json({ message: err.message });
       }

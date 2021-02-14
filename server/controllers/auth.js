@@ -12,6 +12,9 @@ const generateAuthToken = (_id, name, email) => {
     expiresIn: "1m",
   });
 };
+const generateRefreshToken = (_id, name, email) => {
+  return jwt.sign({ _id, name, email }, process.env.REFRESH_TOKEN_SECRET);
+};
 
 const register = async (req, res) => {
   console.log("we got the request");
@@ -50,6 +53,7 @@ const register = async (req, res) => {
 };
 const login = async (req, res) => {
   const { error } = loginValidation(req.body);
+  console.log(req.body);
   if (error) return res.status(400).json({ message: error.details[0].message });
   const { email, password } = req.body;
   try {
@@ -61,9 +65,10 @@ const login = async (req, res) => {
         return res.status(400).json({ message: "Password is incorect!" });
       }
       const auth_token = generateAuthToken(user._id, user.name, user.email);
-      const refresh_token = jwt.sign(
-        { _id: user._id },
-        process.env.REFRESH_TOKEN_SECRET
+      const refresh_token = generateRefreshToken(
+        user._id,
+        user.name,
+        user.email
       );
       const newRefreshToken = new RefreshToken({
         refresh_token,
@@ -116,7 +121,8 @@ const generateNewauthToken = async (req, res) => {
       return res
         .sendStatus(400)
         .json({ message: "You are logged out, Need to login again!" });
-    const authToken = generateAuthToken(req.user._id);
+    const { _id, name, email } = req.user;
+    const authToken = generateAuthToken(_id, name, email);
     return res.json({ message: "new token generated", auth_token: authToken });
   } catch (error) {
     return res.send(500).json(error.message);
